@@ -6,7 +6,11 @@ function! SeedRNG()
     let g:seed = fmod(localtime(), 44488) + 1
 endfunction
 
-" TODO: Try drawing the cells using syntax highlighting instead of characters.
+" TODO: Try to configure the cursor so it is not displayed. For terminal vim I
+" believe the terminal itself would have to be configured from within vim. Or
+" perhaps we could create highlighting to just conceal the cursor altogether?
+" Looking at sneak.vim it seems that he has to do something to prevent that
+" from happening so logically I should be able to make it happen.
 " TODO: Consider using randomness from the system to generate random numbers:
 " http://stackoverflow.com/questions/20430493/how-to-generate-random-numbers-in-the-buffer
 " http://stackoverflow.com/questions/3062746/special-simple-random-number-generator
@@ -59,7 +63,11 @@ function! InitializeScreenSaver()
     set showtabline=0
 endfunction
 
-function! InitializeDataStructures()
+function! InitializeGameOfLife()
+    " Highlight the living cells
+    highlight LivingCell ctermfg=0 ctermbg=0
+    syntax match LivingCell "\#"
+
     let g:update_speed = 100
     " Add 2 for the two rows of padding
     let g:width = &columns + 2
@@ -108,7 +116,7 @@ function! DisplayBoard()
         endfor
         call setline(y, line)
     endfor
-    redraw!
+    redraw
 endfunction
 
 function! UpdateBoard()
@@ -147,7 +155,7 @@ endfunction
 
 function! GameOfLife()
     call InitializeScreenSaver()
-    call InitializeDataStructures()
+    call InitializeGameOfLife()
     call GameLoop()
     call QuitScreenSaver()
 endfunction
