@@ -53,7 +53,7 @@ endfunction
 function! InitializeScreenSaver()
     " Open up a blank buffer
     -tabedit
-    " Turn off options to maximize screen space
+    " Maximize screen space
     let g:save_laststatus = &laststatus
     let g:save_showtabline = &showtabline
     setlocal nonumber
@@ -65,7 +65,7 @@ endfunction
 
 function! InitializeGameOfLife()
     " Highlight the living cells
-    highlight LivingCell ctermfg=0 ctermbg=0
+    highlight LivingCell term=reverse cterm=reverse gui=reverse
     syntax match LivingCell "\#"
 
     let g:update_speed = 100
@@ -79,10 +79,7 @@ function! InitializeGameOfLife()
 
     " Create an empty board
     for y in range(0, g:height-1)
-        call add(g:board, [])
-        for x in range(0, g:width-1)
-            call add(g:board[y], 0)
-        endfor
+        call add(g:board, repeat([0], g:width))
     endfor
 
     call SeedRNG()
@@ -123,8 +120,8 @@ function! UpdateBoard()
     " TODO: See if doing a copy on each row would be more efficient or not
     let g:update_buffer = deepcopy(g:board)
     " Be sure to only display the non-padded part of the data structure
-    let n_state = 0
     for y in range(1, g:height-2)
+        let n_state = 0
         if g:update_buffer[y-1][0] | let n_state += 32 | endif
         if g:update_buffer[y-1][1] | let n_state += 4  | endif
         if g:update_buffer[y  ][0] | let n_state += 16 | endif
@@ -149,7 +146,6 @@ function! GameLoop()
         endif
         call DisplayBoard()
         call UpdateBoard()
-        execute "sleep ".g:update_speed."m"
     endwhile
 endfunction
 
