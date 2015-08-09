@@ -1,3 +1,7 @@
+" TODO: Do profiling on this to see where speedups can be made. I
+" suspect/wonder if copying the previous generations down on g:draw_buffer
+" when the picture fills the screen is slow. If it is slow, I wonder if we can
+" make some sort of circular list structure to fix it.
 function! BuildLookupTable(rule_number)
     let rule_num = a:rule_number
     let g:lookup_table = repeat([0], 8)
@@ -15,7 +19,7 @@ function! GetNextState(lc, mc, rc)
     return g:lookup_table[l + c + m]
 endfunction
 
-function! InitializeElementary(rule_num)
+function! InitializeElementary(rule_num, init_random)
     " Add 2 for the two rows of padding
     let g:width = &columns + 2
     " Subtract 1 for the command line window
@@ -45,27 +49,28 @@ function! InitializeElementary(rule_num)
         call add(g:draw_buffer, repeat(' ', g:width-2))
     endfor
 
-    " Create an empty board
+    " Create an empty board an initialize it
     let g:board = repeat([0], g:width)
     let g:update_buffer = repeat([0], g:width)
-    " Initialize the board
-    call SeedRNG(localtime())
-    " Be sure to only initialize the non-padding areas
-    " for x in range(1, g:width-2)
-    "     let g:board[x] = GetRand() % 2
-    " endfor
-    let g:board[60] = 1
+    if a:init_random
+        call SeedRNG(localtime())
+        for x in range(1, g:width-2)
+            let g:board[x] = GetRand() % 2
+        endfor
+    else
+        let g:board[g:width / 2] = 1
+    endif
     call UpdateDrawBuffer(g:generation_num)
 endfunction
 
 function! UpdateDrawBuffer(generation_num)
     let line = ''
     for x in range(1, g:width-2)
-        let char = ' '
+        let cell = ' '
         if g:board[x]
-            let char = '#'
+            let cell = s:cell_char
         endif
-        let line = line . char
+        let line = line . cell
     endfor
     let g:draw_buffer[a:generation_num-1] = line
 endfunction
@@ -104,15 +109,31 @@ function! GameLoop2()
         endif
         call DisplayBoard2()
         call UpdateBoard2()
-        sleep 100m
+        sleep 150m
     endwhile
 endfunction
 
-function! Elementary(rule_num)
+function! Test(first_arg, ...)
+    echo a:first_arg
+    echo a:0
+    echo a:1
+    echo a:000
+endfunction
+
+command! -nargs=* Test call Test(<f-args>)
+
+function! Elementary(...)
+    " I like ECA 90
+    let rule_num = 90
+    let init_random = 0
+    if len(a:1)
+        let rule_num = a:1[0]
+    endif
+    if len(a:1) == 2
+        let init_random = 1
+    endif
     call InitializeScreenSaver()
-    call InitializeElementary(a:rule_num)
+    call InitializeElementary(rule_num, init_random)
     call GameLoop2()
     call QuitScreenSaver()
 endfunction
-
-command! -nargs=1 ScreenSaver2 call Elementary(<f-args>)
