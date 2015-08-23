@@ -113,24 +113,17 @@ function! GameLoop2()
     endwhile
 endfunction
 
-function! Test(first_arg, ...)
-    echo a:first_arg
-    echo a:0
-    echo a:1
-    echo a:000
-endfunction
-
-command! -nargs=* Test call Test(<f-args>)
-
 function! Elementary(...)
     " I like ECA 90
     let rule_num = 90
     let init_random = 0
-    if len(a:1)
-        let rule_num = a:1[0]
-    endif
-    if len(a:1) == 2
-        let init_random = 1
+    if a:0
+        if len(a:1)
+            let rule_num = a:1[0]
+        endif
+        if len(a:1) == 2
+            let init_random = 1
+        endif
     endif
     call InitializeScreenSaver()
     call InitializeElementary(rule_num, init_random)

@@ -43,12 +43,35 @@ function! QuitScreenSaver()
 endfunction
 
 function! RunScreenSaver(ss_name, ...)
-    let Ss_func = function(a:ss_name)
-    if a:0
-        call Ss_func(a:000)
+    if has_key(g:screensaver_default_screensavers, a:ss_name)
+        let Fn = function(g:screensaver_default_screensavers[a:ss_name])
     else
-        call Ss_func()
+        echohl ErrorMsg
+        echom "No screensaver defined under that name"
+        echohl NONE
+        return
+    endif
+
+    if a:0
+        call Fn(a:000)
+    else
+        call Fn()
     endif
 endfunction
 
-command! -nargs=* ScreenSaver call RunScreenSaver(<f-args>)
+let g:screensaver_default_screensavers = {
+            \ 'gol':     'GameOfLife',
+            \ 'eca':     'Elementary',
+            \ 'uzumaki': 'Uzumaki',
+            \ }
+
+" TODO: Some screensavers (like eca) can take one or more arguments. Try to
+" make this completion smarter. Perhaps a solution would be to associate a
+" function with each screensaver which would modify completion. That could
+" have the added benefit of letting the user create their own screensavers
+" using custom completion.
+function! FilterScreenSaverList(arg_lead, cmd_line_unused, cursor_pos_unused)
+    return filter(keys(g:screensaver_default_screensavers), 'stridx(v:val, a:arg_lead) == 0')
+endfun
+
+command! -nargs=* -complete=customlist,FilterScreenSaverList ScreenSaver call RunScreenSaver(<f-args>)
