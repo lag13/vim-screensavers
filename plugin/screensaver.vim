@@ -25,6 +25,7 @@ function! InitializeScreenSaver()
     setlocal nonumber
     setlocal nocursorline
     setlocal nocursorcolumn
+    setlocal nowrap
     let g:save_laststatus = &laststatus
     let g:save_showtabline = &showtabline
     set laststatus=0
@@ -63,6 +64,7 @@ let g:screensaver_default_screensavers = {
             \ 'gol':     'GameOfLife',
             \ 'eca':     'Elementary',
             \ 'uzumaki': 'Uzumaki',
+            \ 'clock':   'Clock',
             \ }
 
 " TODO: Some screensavers (like eca) can take one or more arguments. Try to
