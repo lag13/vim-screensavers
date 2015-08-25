@@ -1,6 +1,7 @@
 let g:alphabet = {}
 let g:char_width = 11
 let g:char_height = 11
+let g:num_spaces_between_letters = 3
 
 function! InitializeAlphabet()
     let zero = []
@@ -179,9 +180,8 @@ function! ClockLoop()
 endfunction
 
 function! GetStrLen(str)
-    let separator_len = 3
     let str_len = strlen(a:str)
-    return str_len*g:char_width+separator_len*str_len
+    return str_len*g:char_width+g:num_spaces_between_letters*(str_len-1)
 endfunction
 
 " Alters the direction of travel if we've hit an edge
@@ -226,14 +226,14 @@ function! DrawClock(clock, upper_left_corner)
 endfunction
 
 function! GetClock(str)
-    let spaces = "   "
+    let spaces = repeat(' ', g:num_spaces_between_letters)
     let result = []
     for i in range(0, g:char_height-1)
         let line = ""
         for j in range(0, strlen(a:str)-1)
             let line = line . get(g:alphabet, a:str[j])[i] . spaces
         endfor
-        let line = strpart(line, 0, strlen(line) - strlen(spaces))
+        let line = strpart(line, 0, strlen(line) - g:num_spaces_between_letters)
         call add(result, line)
     endfor
     return result

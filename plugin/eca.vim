@@ -109,7 +109,7 @@ function! GameLoop2()
         endif
         call DisplayBoard2()
         call UpdateBoard2()
-        sleep 150m
+        sleep 100m
     endwhile
 endfunction
 
@@ -125,6 +125,11 @@ function! Elementary(...)
             let init_random = 1
         endif
     endif
+    " TODO: It seems there's a little issue/bug happening where before the
+    " function call below, showtabline=2 and &lines = 61. After the call to
+    " InitializeScreenSaver(), showtabline=0 and &lines should be 63 but it's
+    " still 61. It seems that all the other screen savers are experiencing
+    " this issue, look into what is going on.
     call InitializeScreenSaver()
     call InitializeElementary(rule_num, init_random)
     call GameLoop2()
