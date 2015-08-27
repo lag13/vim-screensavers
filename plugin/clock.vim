@@ -1,9 +1,6 @@
-let g:alphabet = {}
-let g:char_width = 11
-let g:char_height = 11
-let g:num_spaces_between_letters = 3
-
 function! InitializeAlphabet()
+    let letters = {}
+
     let zero = []
     call add(zero, " 000000000 ")
     call add(zero, "0         0")
@@ -147,20 +144,25 @@ function! InitializeAlphabet()
     call add(colon, "    :::    ")
     call add(colon, "           ")
 
-    let g:alphabet['0'] = zero
-    let g:alphabet['1'] = one
-    let g:alphabet['2'] = two
-    let g:alphabet['3'] = three
-    let g:alphabet['4'] = four
-    let g:alphabet['5'] = five
-    let g:alphabet['6'] = six
-    let g:alphabet['7'] = seven
-    let g:alphabet['8'] = eight
-    let g:alphabet['9'] = nine
-    let g:alphabet[':'] = colon
+    let letters['0'] = zero
+    let letters['1'] = one
+    let letters['2'] = two
+    let letters['3'] = three
+    let letters['4'] = four
+    let letters['5'] = five
+    let letters['6'] = six
+    let letters['7'] = seven
+    let letters['8'] = eight
+    let letters['9'] = nine
+    let letters[':'] = colon
+    return letters
 endfunction
 
 function! ClockLoop()
+    let letter_height = 11
+    let letter_width = 11
+    let letter_definitions = InitializeAlphabet()
+    let num_spaces_between_letters = 3
     let dy = 1
     let dx = 1
     let line = 1
@@ -170,18 +172,18 @@ function! ClockLoop()
             break
         endif
         let cur_time = GetCurTime()
-        call DrawClock(GetClock(cur_time), [line, col])
+        call DrawClock(GetClock(cur_time, letter_definitions, num_spaces_between_letters, letter_height), [line, col], letter_height)
         redraw
         sleep 100ms
-        let [dy, dx] = ComputeDirection([line, col], g:char_height, GetStrLen(cur_time), dy, dx)
+        let [dy, dx] = ComputeDirection([line, col], letter_height, GetStrLen(cur_time, num_spaces_between_letters, letter_width), dy, dx)
         let line = line + dy
         let col = col + dx
     endwhile
 endfunction
 
-function! GetStrLen(str)
+function! GetStrLen(str, num_spaces_between_letters, letter_width)
     let str_len = strlen(a:str)
-    return str_len*g:char_width+g:num_spaces_between_letters*(str_len-1)
+    return str_len*a:letter_width+a:num_spaces_between_letters*(str_len-1)
 endfunction
 
 " Alters the direction of travel if we've hit an edge
@@ -209,31 +211,31 @@ function! ComputeDirection(upper_left_corner, height, width, dy, dx)
     return [new_dy, new_dx]
 endfunction
 
-function! DrawClock(clock, upper_left_corner)
+function! DrawClock(clock, upper_left_corner, letter_height)
     let corner_line = a:upper_left_corner[0]
     let corner_col = a:upper_left_corner[1]
     let empty_line = repeat(' ', &columns)
     for l in range(1, corner_line-1)
         call setline(l, empty_line)
     endfor
-    for l in range(corner_line, corner_line + g:char_height - 1)
+    for l in range(corner_line, corner_line + a:letter_height - 1)
         let line = repeat(' ', corner_col-1) .  a:clock[l-corner_line]
         call setline(l, line)
     endfor
-    for l in range(corner_line + g:char_height, &lines-1)
+    for l in range(corner_line + a:letter_height, &lines-1)
         call setline(l, empty_line)
     endfor
 endfunction
 
-function! GetClock(str)
-    let spaces = repeat(' ', g:num_spaces_between_letters)
+function! GetClock(str, letter_definitions, num_spaces_between_letters, letter_height)
+    let spaces = repeat(' ', a:num_spaces_between_letters)
     let result = []
-    for i in range(0, g:char_height-1)
+    for i in range(0, a:letter_height-1)
         let line = ""
         for j in range(0, strlen(a:str)-1)
-            let line = line . get(g:alphabet, a:str[j])[i] . spaces
+            let line = line . get(a:letter_definitions, a:str[j])[i] . spaces
         endfor
-        let line = strpart(line, 0, strlen(line) - g:num_spaces_between_letters)
+        let line = strpart(line, 0, strlen(line) - a:num_spaces_between_letters)
         call add(result, line)
     endfor
     return result
