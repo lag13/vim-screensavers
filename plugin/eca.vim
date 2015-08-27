@@ -85,6 +85,9 @@ endfunction
 function! UpdateBoard2()
     " TODO: See if doing a copy on each row would be more efficient or not
     " Be sure to only display the non-padded part of the data structure
+    " TODO: It would be interesting to see what the performance would be if
+    " each row of the board is the same ECA but just one generation forward.
+    " Then we would never need to copy rows.
     for x in range(1, g:width-2)
         let g:update_buffer[x] = GetNextState(g:board[x-1], g:board[x], g:board[x+1])
     endfor

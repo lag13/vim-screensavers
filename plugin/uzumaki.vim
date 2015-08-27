@@ -7,28 +7,43 @@ function! InitializeUzumaki()
     endfor
 endfunction
 
-function! SpiralPos(t, columns, lines, dx, dy, start_col, start_line)
-    return SpiralPosHelper(a:t, 0, a:columns, a:lines-1, a:dx, a:dy, a:start_col, a:start_line)
-endfunction
-
 " which_arm | meaning
 " ----------+--------
 "     0     | top arm
 "     1     | right arm
 "     2     | bottom arm
 "     3     | left arm
-function! SpiralPosHelper(t, which_arm, cur_arm_len, prev_arm_len, cur_delta, prev_delta, col, line)
-    if a:t < a:cur_arm_len " t falls somewhere on the current arm
-        return NextSpiralPos(a:which_arm, a:line, a:col, a:t, 0)
-    elseif a:cur_arm_len < a:cur_delta " The spiral has gone as far as possible
-        return [a:line, a:col]
-    else
-        let [new_line, new_col] = NextSpiralPos(a:which_arm, a:line, a:col, a:cur_arm_len-1, 1)
-        let new_t = a:t - a:cur_arm_len
-        let next_arm = (a:which_arm + 1) % 4
-        let cur_arm_new_len = a:cur_arm_len - a:cur_delta
-        return SpiralPosHelper(new_t, next_arm, a:prev_arm_len, cur_arm_new_len, a:prev_delta, a:cur_delta, new_col, new_line)
-    endif
+function! GetSpiralPath(max_t, columns, lines, dx, dy, start_col, start_line)
+    let my_t = 1
+    let which_arm = 0
+    let cur_arm_len = a:columns
+    let next_arm_len = a:lines-1
+    let cur_delta = a:dx
+    let next_delta = a:dy
+    let col = a:start_col
+    let line = a:start_line
+    let spiral_path = [[line, col]]
+
+    for i in range(1, a:max_t)
+        if my_t < cur_arm_len
+            let [new_line, new_col] = NextSpiralPos(which_arm, line, col, my_t, 0)
+            let my_t += 1
+        else
+            let [new_line, new_col] = NextSpiralPos(which_arm, line, col, cur_arm_len-1, 1)
+            let which_arm = (which_arm + 1) % 4
+            let cur_arm_len = cur_arm_len - cur_delta
+            let temp = cur_arm_len
+            let cur_arm_len = next_arm_len
+            let next_arm_len = temp
+            let temp = cur_delta
+            let cur_delta = next_delta
+            let next_delta = temp
+            let my_t = 1
+            let [line, col] = [new_line, new_col]
+        endif
+        call add(spiral_path, [new_line, new_col])
+    endfor
+    return spiral_path
 endfunction
 
 function! NextSpiralPos(which_arm, line, col, change, nudge)
@@ -78,12 +93,7 @@ function! UzumakiLoop()
     let dx = 3
     let dy = 2
     let sleep_len = 3
-    let spiral_path = []
-    " Build the spiral
-    for t in range(0, MaxTvalue(width, height, dx, dy))
-        let pos = SpiralPos(t, width, height, dx, dy, start_col, start_line)
-        call add(spiral_path, pos)
-    endfor
+    let spiral_path = GetSpiralPath(MaxTvalue(width, height, dx, dy), width, height, dx, dy, start_col, start_line)
     let rev_sp = reverse(copy(spiral_path))
     while 1
         if DrawSpiral(spiral_path, '#', sleep_len)
