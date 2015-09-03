@@ -2,7 +2,7 @@
 " suspect/wonder if copying the previous generations down on g:draw_buffer
 " when the picture fills the screen is slow. If it is slow, I wonder if we can
 " make some sort of circular list structure to fix it.
-function! BuildLookupTable(rule_number)
+function! s:buildLookupTable(rule_number)
     let rule_num = a:rule_number
     let g:lookup_table = repeat([0], 8)
     for i in range(0, 7)
@@ -12,14 +12,14 @@ function! BuildLookupTable(rule_number)
     endfor
 endfunction
 
-function! GetNextState(lc, mc, rc)
+function! s:getNextState(lc, mc, rc)
     let l = 4 * a:lc
     let c = 2 * a:mc
     let m =     a:rc
     return g:lookup_table[l + c + m]
 endfunction
 
-function! InitializeElementary(rule_num, init_random)
+function! s:initializeElementary(rule_num, init_random)
     " Add 2 for the two rows of padding
     let g:width = &columns + 2
     " Subtract 1 for the command line window
@@ -42,7 +42,7 @@ function! InitializeElementary(rule_num, init_random)
         execute "syntax match LivingCell '".s:cell_char."'"
     endif
 
-    call BuildLookupTable(a:rule_num)
+    call s:buildLookupTable(a:rule_num)
 
     " Create an empty draw buffer
     for y in range(0, g:height-1)
@@ -53,17 +53,17 @@ function! InitializeElementary(rule_num, init_random)
     let g:board = repeat([0], g:width)
     let g:update_buffer = repeat([0], g:width)
     if a:init_random
-        call SeedRNG(localtime())
+        call screensaver#seedRNG(localtime())
         for x in range(1, g:width-2)
-            let g:board[x] = GetRand() % 2
+            let g:board[x] = screensaver#getRand() % 2
         endfor
     else
         let g:board[g:width / 2] = 1
     endif
-    call UpdateDrawBuffer(g:generation_num)
+    call s:updateDrawBuffer(g:generation_num)
 endfunction
 
-function! UpdateDrawBuffer(generation_num)
+function! s:updateDrawBuffer(generation_num)
     let line = ''
     for x in range(1, g:width-2)
         let cell = ' '
@@ -75,21 +75,21 @@ function! UpdateDrawBuffer(generation_num)
     let g:draw_buffer[a:generation_num-1] = line
 endfunction
 
-function! DisplayBoard2()
+function! s:displayBoard()
     for y in range(0, g:height-1)
         call setline(y+1, g:draw_buffer[y])
     endfor
     redraw
 endfunction
 
-function! UpdateBoard2()
+function! s:updateBoard()
     " TODO: See if doing a copy on each row would be more efficient or not
     " Be sure to only display the non-padded part of the data structure
     " TODO: It would be interesting to see what the performance would be if
     " each row of the board is the same ECA but just one generation forward.
     " Then we would never need to copy rows.
     for x in range(1, g:width-2)
-        let g:update_buffer[x] = GetNextState(g:board[x-1], g:board[x], g:board[x+1])
+        let g:update_buffer[x] = s:getNextState(g:board[x-1], g:board[x], g:board[x+1])
     endfor
     let g:board = copy(g:update_buffer)
 
@@ -101,22 +101,22 @@ function! UpdateBoard2()
     else
         let g:generation_num += 1
     endif
-    call UpdateDrawBuffer(g:generation_num)
+    call s:updateDrawBuffer(g:generation_num)
 endfunction
 
-function! GameLoop2()
+function! s:gameLoop()
     while 1
         " Quit if any character is pressed
         if getchar(0)
             break
         endif
-        call DisplayBoard2()
-        call UpdateBoard2()
+        call s:displayBoard()
+        call s:updateBoard()
         sleep 100m
     endwhile
 endfunction
 
-function! Elementary(...)
+function! screensavers#eca#elementary(...)
     " I like ECA 90
     let rule_num = 90
     let init_random = 0
@@ -133,8 +133,8 @@ function! Elementary(...)
     " InitializeScreenSaver(), showtabline=0 and &lines should be 63 but it's
     " still 61. It seems that all the other screen savers are experiencing
     " this issue, look into what is going on.
-    call InitializeScreenSaver()
-    call InitializeElementary(rule_num, init_random)
-    call GameLoop2()
-    call QuitScreenSaver()
+    call screensaver#initializeScreenSaver()
+    call s:initializeElementary(rule_num, init_random)
+    call s:gameLoop()
+    call screensaver#quitScreenSaver()
 endfunction

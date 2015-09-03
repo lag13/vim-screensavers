@@ -1,4 +1,4 @@
-function! InitializeAlphabet()
+function! s:initializeAlphabet()
     let letters = {}
 
     let zero = []
@@ -158,10 +158,10 @@ function! InitializeAlphabet()
     return letters
 endfunction
 
-function! ClockLoop()
+function! s:clockLoop()
     let letter_height = 11
     let letter_width = 11
-    let letter_definitions = InitializeAlphabet()
+    let letter_definitions = s:initializeAlphabet()
     let num_spaces_between_letters = 3
     let dy = 1
     let dx = 1
@@ -171,23 +171,23 @@ function! ClockLoop()
         if getchar(0)
             break
         endif
-        let cur_time = GetCurTime()
-        call DrawClock(GetClock(cur_time, letter_definitions, num_spaces_between_letters, letter_height), [line, col], letter_height)
+        let cur_time = s:getCurTime()
+        call s:drawClock(s:getClock(cur_time, letter_definitions, num_spaces_between_letters, letter_height), [line, col], letter_height)
         redraw
         sleep 100ms
-        let [dy, dx] = ComputeDirection([line, col], letter_height, GetStrLen(cur_time, num_spaces_between_letters, letter_width), dy, dx)
+        let [dy, dx] = s:computeDirection([line, col], letter_height, s:getStrLen(cur_time, num_spaces_between_letters, letter_width), dy, dx)
         let line = line + dy
         let col = col + dx
     endwhile
 endfunction
 
-function! GetStrLen(str, num_spaces_between_letters, letter_width)
+function! s:getStrLen(str, num_spaces_between_letters, letter_width)
     let str_len = strlen(a:str)
     return str_len*a:letter_width+a:num_spaces_between_letters*(str_len-1)
 endfunction
 
 " Alters the direction of travel if we've hit an edge
-function! ComputeDirection(upper_left_corner, height, width, dy, dx)
+function! s:computeDirection(upper_left_corner, height, width, dy, dx)
     let corner_line = a:upper_left_corner[0]
     let corner_col = a:upper_left_corner[1]
     let line_lower_limit = 1
@@ -211,7 +211,7 @@ function! ComputeDirection(upper_left_corner, height, width, dy, dx)
     return [new_dy, new_dx]
 endfunction
 
-function! DrawClock(clock, upper_left_corner, letter_height)
+function! s:drawClock(clock, upper_left_corner, letter_height)
     let corner_line = a:upper_left_corner[0]
     let corner_col = a:upper_left_corner[1]
     let empty_line = repeat(' ', &columns)
@@ -227,7 +227,7 @@ function! DrawClock(clock, upper_left_corner, letter_height)
     endfor
 endfunction
 
-function! GetClock(str, letter_definitions, num_spaces_between_letters, letter_height)
+function! s:getClock(str, letter_definitions, num_spaces_between_letters, letter_height)
     let spaces = repeat(' ', a:num_spaces_between_letters)
     let result = []
     for i in range(0, a:letter_height-1)
@@ -241,14 +241,13 @@ function! GetClock(str, letter_definitions, num_spaces_between_letters, letter_h
     return result
 endfunction
 
-function! GetCurTime()
+function! s:getCurTime()
     return strftime("%H:%M:%S")
 endfunction
 
-function! Clock()
-    call InitializeScreenSaver()
-    call InitializeAlphabet()
-    call ClockLoop()
-    call QuitScreenSaver()
+function! screensavers#clock#clock()
+    call screensaver#initializeScreenSaver()
+    call s:clockLoop()
+    call screensaver#quitScreenSaver()
 endfunction
 

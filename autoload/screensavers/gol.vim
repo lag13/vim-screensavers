@@ -1,4 +1,4 @@
-function! GetNumActiveBits(num)
+function! s:getNumActiveBits(num)
     let n = a:num
     let c = 0
     while n
@@ -10,9 +10,9 @@ function! GetNumActiveBits(num)
     return c
 endfunction
 
-function! CalculateLookupTableEntry(n_state)
+function! s:calculateLookupTableEntry(n_state)
     let cell_state = a:n_state / 16 % 2
-    let living_count = GetNumActiveBits(a:n_state)
+    let living_count = s:getNumActiveBits(a:n_state)
     if living_count == 3
         return 1
     elseif living_count == 4
@@ -22,7 +22,7 @@ function! CalculateLookupTableEntry(n_state)
     endif
 endfunction
 
-function! InitializeGameOfLife()
+function! s:initializeGameOfLife()
     " Add 2 for the two rows of padding
     let g:width = &columns + 2
     " Subtract 1 for the command line window
@@ -48,19 +48,19 @@ function! InitializeGameOfLife()
         call add(g:board, repeat([0], g:width))
     endfor
 
-    call SeedRNG(localtime())
+    call screensaver#seedRNG(localtime())
     " Be sure to only initialize the non-padding areas
     for y in range(1, g:height-2)
         for x in range(1, g:width-2)
-            let g:board[y][x] = GetRand() % 2
+            let g:board[y][x] = screensaver#getRand() % 2
         endfor
     endfor
     for i in range(0, 511)
-        call add(g:lookup_table, CalculateLookupTableEntry(i))
+        call add(g:lookup_table, s:calculateLookupTableEntry(i))
     endfor
 endfunction
 
-function! DisplayBoard()
+function! s:displayBoard()
     " Be sure to only display the non-padded part of the data structure
     for y in range(1, g:height-2)
         let line = ''
@@ -76,7 +76,7 @@ function! DisplayBoard()
     redraw
 endfunction
 
-function! UpdateBoard()
+function! s:updateBoard()
     " TODO: See if doing a copy on each row would be more efficient or not
     let g:update_buffer = deepcopy(g:board)
     " Be sure to only update the non-padded part of the data structure
@@ -98,20 +98,20 @@ function! UpdateBoard()
     endfor
 endfunction
 
-function! GameLoop()
+function! s:gameLoop()
     while 1
         " Quit if any character is pressed
         if getchar(0)
             break
         endif
-        call DisplayBoard()
-        call UpdateBoard()
+        call s:displayBoard()
+        call s:updateBoard()
     endwhile
 endfunction
 
-function! GameOfLife()
-    call InitializeScreenSaver()
-    call InitializeGameOfLife()
-    call GameLoop()
-    call QuitScreenSaver()
+function! screensavers#gol#gameOfLife()
+    call screensaver#initializeScreenSaver()
+    call s:initializeGameOfLife()
+    call s:gameLoop()
+    call screensaver#quitScreenSaver()
 endfunction
