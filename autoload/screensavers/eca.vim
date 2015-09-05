@@ -1,14 +1,14 @@
 " TODO: Do profiling on this to see where speedups can be made. I
-" suspect/wonder if copying the previous generations down on g:draw_buffer
+" suspect/wonder if copying the previous generations down on s:draw_buffer
 " when the picture fills the screen is slow. If it is slow, I wonder if we can
 " make some sort of circular list structure to fix it.
 function! s:buildLookupTable(rule_number)
     let rule_num = a:rule_number
-    let g:lookup_table = repeat([0], 8)
+    let s:lookup_table = repeat([0], 8)
     for i in range(0, 7)
         let rem = rule_num % 2
         let rule_num = rule_num / 2
-        let g:lookup_table[i] = rem
+        let s:lookup_table[i] = rem
     endfor
 endfunction
 
@@ -16,68 +16,56 @@ function! s:getNextState(lc, mc, rc)
     let l = 4 * a:lc
     let c = 2 * a:mc
     let m =     a:rc
-    return g:lookup_table[l + c + m]
+    return s:lookup_table[l + c + m]
 endfunction
 
 function! s:initializeElementary(rule_num, init_random)
     " Add 2 for the two rows of padding
-    let g:width = &columns + 2
+    let s:width = &columns + 2
     " Subtract 1 for the command line window
-    let g:height = &lines - 1
-    let g:update_buffer = []
-    let g:board = []
-    let g:draw_buffer = []
-    let g:generation_num = 1
-    let g:lookup_table = []
-    let s:syntax_highlighting = get(g:, 'syntax_highlighting', 0)
-    if s:syntax_highlighting
-        let s:cell_char = "\t"
-    else
-        let s:cell_char = "#"
-    endif
-
-    " Highlight the living cells
-    if s:syntax_highlighting
-        highlight LivingCell term=reverse cterm=reverse gui=reverse
-        execute "syntax match LivingCell '".s:cell_char."'"
-    endif
+    let s:height = &lines - 1
+    let s:update_buffer = []
+    let s:board = []
+    let s:draw_buffer = []
+    let s:generation_num = 1
+    let s:lookup_table = []
 
     call s:buildLookupTable(a:rule_num)
 
     " Create an empty draw buffer
-    for y in range(0, g:height-1)
-        call add(g:draw_buffer, repeat(' ', g:width-2))
+    for y in range(0, s:height-1)
+        call add(s:draw_buffer, repeat(' ', s:width-2))
     endfor
 
     " Create an empty board an initialize it
-    let g:board = repeat([0], g:width)
-    let g:update_buffer = repeat([0], g:width)
+    let s:board = repeat([0], s:width)
+    let s:update_buffer = repeat([0], s:width)
     if a:init_random
         call screensaver#seedRNG(localtime())
-        for x in range(1, g:width-2)
-            let g:board[x] = screensaver#getRand() % 2
+        for x in range(1, s:width-2)
+            let s:board[x] = screensaver#getRand() % 2
         endfor
     else
-        let g:board[g:width / 2] = 1
+        let s:board[s:width / 2] = 1
     endif
-    call s:updateDrawBuffer(g:generation_num)
+    call s:updateDrawBuffer(s:generation_num)
 endfunction
 
 function! s:updateDrawBuffer(generation_num)
     let line = ''
-    for x in range(1, g:width-2)
+    for x in range(1, s:width-2)
         let cell = ' '
-        if g:board[x]
-            let cell = s:cell_char
+        if s:board[x]
+            let cell = '#'
         endif
         let line = line . cell
     endfor
-    let g:draw_buffer[a:generation_num-1] = line
+    let s:draw_buffer[a:generation_num-1] = line
 endfunction
 
 function! s:displayBoard()
-    for y in range(0, g:height-1)
-        call setline(y+1, g:draw_buffer[y])
+    for y in range(0, s:height-1)
+        call setline(y+1, s:draw_buffer[y])
     endfor
     redraw
 endfunction
@@ -88,20 +76,20 @@ function! s:updateBoard()
     " TODO: It would be interesting to see what the performance would be if
     " each row of the board is the same ECA but just one generation forward.
     " Then we would never need to copy rows.
-    for x in range(1, g:width-2)
-        let g:update_buffer[x] = s:getNextState(g:board[x-1], g:board[x], g:board[x+1])
+    for x in range(1, s:width-2)
+        let s:update_buffer[x] = s:getNextState(s:board[x-1], s:board[x], s:board[x+1])
     endfor
-    let g:board = copy(g:update_buffer)
+    let s:board = copy(s:update_buffer)
 
     " Update the draw buffer
-    if g:generation_num == g:height
-        for g in range(0, g:height-2)
-            let g:draw_buffer[g] = g:draw_buffer[g+1]
+    if s:generation_num == s:height
+        for g in range(0, s:height-2)
+            let s:draw_buffer[g] = s:draw_buffer[g+1]
         endfor
     else
-        let g:generation_num += 1
+        let s:generation_num += 1
     endif
-    call s:updateDrawBuffer(g:generation_num)
+    call s:updateDrawBuffer(s:generation_num)
 endfunction
 
 function! s:gameLoop()

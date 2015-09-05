@@ -24,50 +24,38 @@ endfunction
 
 function! s:initializeGameOfLife()
     " Add 2 for the two rows of padding
-    let g:width = &columns + 2
+    let s:width = &columns + 2
     " Subtract 1 for the command line window
-    let g:height = &lines - 1 + 2
-    let g:update_buffer = []
-    let g:board = []
-    let g:lookup_table = []
-    let s:syntax_highlighting = get(g:, 'syntax_highlighting', 0)
-    if s:syntax_highlighting
-        let s:cell_char = "\t"
-    else
-        let s:cell_char = "#"
-    endif
-
-    " Highlight the living cells
-    if s:syntax_highlighting
-        highlight LivingCell term=reverse cterm=reverse gui=reverse
-        execute "syntax match LivingCell '".s:cell_char."'"
-    endif
+    let s:height = &lines - 1 + 2
+    let s:update_buffer = []
+    let s:board = []
+    let s:lookup_table = []
 
     " Create an empty board
-    for y in range(0, g:height-1)
-        call add(g:board, repeat([0], g:width))
+    for y in range(0, s:height-1)
+        call add(s:board, repeat([0], s:width))
     endfor
 
     call screensaver#seedRNG(localtime())
     " Be sure to only initialize the non-padding areas
-    for y in range(1, g:height-2)
-        for x in range(1, g:width-2)
-            let g:board[y][x] = screensaver#getRand() % 2
+    for y in range(1, s:height-2)
+        for x in range(1, s:width-2)
+            let s:board[y][x] = screensaver#getRand() % 2
         endfor
     endfor
     for i in range(0, 511)
-        call add(g:lookup_table, s:calculateLookupTableEntry(i))
+        call add(s:lookup_table, s:calculateLookupTableEntry(i))
     endfor
 endfunction
 
 function! s:displayBoard()
     " Be sure to only display the non-padded part of the data structure
-    for y in range(1, g:height-2)
+    for y in range(1, s:height-2)
         let line = ''
-        for x in range(1, g:width-2)
+        for x in range(1, s:width-2)
             let cell = ' '
-            if g:board[y][x]
-                let cell = s:cell_char
+            if s:board[y][x]
+                let cell = '#'
             endif
             let line = line . cell
         endfor
@@ -78,22 +66,22 @@ endfunction
 
 function! s:updateBoard()
     " TODO: See if doing a copy on each row would be more efficient or not
-    let g:update_buffer = deepcopy(g:board)
+    let s:update_buffer = deepcopy(s:board)
     " Be sure to only update the non-padded part of the data structure
-    for y in range(1, g:height-2)
+    for y in range(1, s:height-2)
         let n_state = 0
-        if g:update_buffer[y-1][0] | let n_state += 32 | endif
-        if g:update_buffer[y-1][1] | let n_state += 4  | endif
-        if g:update_buffer[y  ][0] | let n_state += 16 | endif
-        if g:update_buffer[y  ][1] | let n_state += 2  | endif
-        if g:update_buffer[y+1][0] | let n_state += 8  | endif
-        if g:update_buffer[y+1][1] | let n_state += 1  | endif
-        for x in range(1, g:width-2)
+        if s:update_buffer[y-1][0] | let n_state += 32 | endif
+        if s:update_buffer[y-1][1] | let n_state += 4  | endif
+        if s:update_buffer[y  ][0] | let n_state += 16 | endif
+        if s:update_buffer[y  ][1] | let n_state += 2  | endif
+        if s:update_buffer[y+1][0] | let n_state += 8  | endif
+        if s:update_buffer[y+1][1] | let n_state += 1  | endif
+        for x in range(1, s:width-2)
             let n_state = n_state % 64 * 8
-            if g:update_buffer[y-1][x+1] | let n_state += 4 | endif
-            if g:update_buffer[y  ][x+1] | let n_state += 2 | endif
-            if g:update_buffer[y+1][x+1] | let n_state += 1 | endif
-            let g:board[y][x] = g:lookup_table[n_state]
+            if s:update_buffer[y-1][x+1] | let n_state += 4 | endif
+            if s:update_buffer[y  ][x+1] | let n_state += 2 | endif
+            if s:update_buffer[y+1][x+1] | let n_state += 1 | endif
+            let s:board[y][x] = s:lookup_table[n_state]
         endfor
     endfor
 endfunction
@@ -106,6 +94,9 @@ function! s:gameLoop()
         endif
         call s:displayBoard()
         call s:updateBoard()
+        " For some reason if we don't have call to sleep then the screen
+        " doesn't redraw on MacVim so I've added the call.
+        sleep 1m
     endwhile
 endfunction
 

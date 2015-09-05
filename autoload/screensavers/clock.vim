@@ -174,7 +174,7 @@ function! s:clockLoop()
         let cur_time = s:getCurTime()
         call s:drawClock(s:getClock(cur_time, letter_definitions, num_spaces_between_letters, letter_height), [line, col], letter_height)
         redraw
-        sleep 100ms
+        sleep 100m
         let [dy, dx] = s:computeDirection([line, col], letter_height, s:getStrLen(cur_time, num_spaces_between_letters, letter_width), dy, dx)
         let line = line + dy
         let col = col + dx
