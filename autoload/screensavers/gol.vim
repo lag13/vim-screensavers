@@ -96,7 +96,7 @@ function! s:gameLoop()
         call s:updateBoard()
         " For some reason if we don't have call to sleep then the screen
         " doesn't redraw on MacVim so I've added the call.
-        sleep 1m
+        sleep 50m
     endwhile
 endfunction
 
